@@ -100,10 +100,6 @@ class Cost(Enum):
     # Various opportunity cards
     HELL_FAVOURS = ACTION
 
-    # Volume of Collated Research
-    # Hurlers statue, 10 at a time
-    COLLATED_RESEARCH = (ACTION + 4*HELL_FAVOURS)/10
-
     # Hinterland Scrip
     HINTERLAND_SCRIP = 50
 
