@@ -262,9 +262,6 @@ class Cost(Enum):
     # Keeper of the Marigold Menagerie
     SKELETON_WITH_SEVEN_NECKS = ACTION + GROUSE_OBSERVATION
 
-    # Nodule of Trembling Amber
-    TREMBLING_AMBER = 1250
-
     # Rubbery Skull
     # Flute Street, including travel due to quality cap
     RUBBERY_SKULL = 25*ACTION
