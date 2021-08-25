@@ -22,12 +22,12 @@ from .data.torsos import Torso
 
 # This multiplier is applied to the profit margin to avoid losing precision due to rounding.
 PROFIT_MARGIN_MULTIPLIER = 10000000
+ATTRIBUTE_MULTIPLIER = 10000000
 
 # This is the highest number of attribute to calculate fractional exponents for.
 MAXIMUM_ATTRIBUTE = 100
 
-# This is a constant used to calculate difficulty checks. You almost certainly do not need to change this.
-DIFFICULTY_SCALER = 0.6
+from .challenge_functions import DIFFICULTY_SCALER
 
 
 def NewIntermediateBoolVar(self, name, expression, domain):
@@ -197,21 +197,36 @@ def Solve(shadowy_level, bone_market_fluctuations = None, zoological_mania = Non
     model.Add(tentacles == cp_model.LinearExpr.ScalProd(actions.values(), [action.value.tentacles for action in actions.keys()]))
 
     # Amalgamy calculation
+    multiplied_amalgamy = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'multiplied amalgamy')
+    model.Add(multiplied_amalgamy == cp_model.LinearExpr.ScalProd(actions.values(), [int(action.value.amalgamy*ATTRIBUTE_MULTIPLIER) for action in actions.keys()]))
     amalgamy = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'amalgamy')
-    model.Add(amalgamy == cp_model.LinearExpr.ScalProd(actions.values(), [action.value.amalgamy for action in actions.keys()]))
+    model.AddDivisionEquality(amalgamy, multiplied_amalgamy, ATTRIBUTE_MULTIPLIER)
+
+    del multiplied_amalgamy
 
     # Antiquity calculation
+    multiplied_antiquity = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'multiplied antiquity')
+    model.Add(multiplied_antiquity == cp_model.LinearExpr.ScalProd(actions.values(), [int(action.value.antiquity*ATTRIBUTE_MULTIPLIER) for action in actions.keys()]))
     antiquity = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'antiquity')
-    model.Add(antiquity == cp_model.LinearExpr.ScalProd(actions.values(), [action.value.antiquity for action in actions.keys()]))
+    model.AddDivisionEquality(antiquity, multiplied_antiquity, ATTRIBUTE_MULTIPLIER)
+
+    del multiplied_antiquity
 
     # Menace calculation
+    multiplied_menace = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'multiplied menace')
+    model.Add(multiplied_menace == cp_model.LinearExpr.ScalProd(actions.values(), [int(action.value.menace*ATTRIBUTE_MULTIPLIER) for action in actions.keys()]))
     menace = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'menace')
-    model.Add(menace == cp_model.LinearExpr.ScalProd(actions.values(), [action.value.menace for action in actions.keys()]))
+    model.AddDivisionEquality(menace, multiplied_menace, ATTRIBUTE_MULTIPLIER)
+
+    del multiplied_menace
 
     # Implausibility calculation
+    multiplied_implausibility = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'multiplied implausibility')
+    model.Add(multiplied_implausibility == cp_model.LinearExpr.ScalProd(actions.values(), [int(action.value.implausibility*ATTRIBUTE_MULTIPLIER) for action in actions.keys()]))
     implausibility = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'implausibility')
-    model.Add(implausibility == cp_model.LinearExpr.ScalProd(actions.values(), [action.value.implausibility for action in actions.keys()]))
+    model.AddDivisionEquality(implausibility, multiplied_implausibility, ATTRIBUTE_MULTIPLIER)
 
+    del multiplied_implausibility
 
     # Counter-church calculation
     # Calculate amount of Counter-church from Holy Relics of the Thigh of Saint Fiacre
@@ -1167,6 +1182,37 @@ def Solve(shadowy_level, bone_market_fluctuations = None, zoological_mania = Non
     del non_negative_amalgamy, non_negative_menace, non_negative_antiquity, compromising_documents, value_remainder, derived_exhaustion
 
 
+    # The Trifling Diplomat - Reptile
+    model.AddLinearExpressionInDomain(skeleton_in_progress, cp_model.Domain.FromFlatIntervals([160, 169])).OnlyEnforceIf(actions[Buyer.THE_TRIFLING_DIPLOMAT_REPTILE])
+
+    non_negative_amalgamy = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, '{}: {}'.format(Buyer.THE_TRIFLING_DIPLOMAT_REPTILE.name, 'non-negative amalgamy'))
+    model.AddMaxEquality(non_negative_amalgamy, [amalgamy, 0])
+
+    non_negative_menace = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, '{}: {}'.format(Buyer.THE_TRIFLING_DIPLOMAT_REPTILE.name, 'non-negative menace'))
+    model.AddMaxEquality(non_negative_menace, [menace, 0])
+
+    non_negative_antiquity = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, '{}: {}'.format(Buyer.THE_TRIFLING_DIPLOMAT_REPTILE.name, 'non-negative antiquity'))
+    model.AddMaxEquality(non_negative_antiquity, [antiquity, 0])
+
+    compromising_documents = model.NewIntVar(0, cp_model.INT32_MAX, '{}: {}'.format(Buyer.THE_TRIFLING_DIPLOMAT_REPTILE.name, 'compromising documents'))
+    model.AddGeneralMultiplicationEquality(compromising_documents, non_negative_amalgamy, non_negative_menace, non_negative_antiquity)
+
+    value_remainder = model.NewIntVar(0, 49, '{}: {}'.format(Buyer.THE_TRIFLING_DIPLOMAT_REPTILE.name, 'value remainder'))
+    model.AddModuloEquality(value_remainder, value, 50)
+
+    model.Add(primary_revenue == value - value_remainder + 50).OnlyEnforceIf(actions[Buyer.THE_TRIFLING_DIPLOMAT_REPTILE])
+    model.Add(secondary_revenue == 50*compromising_documents).OnlyEnforceIf(actions[Buyer.THE_TRIFLING_DIPLOMAT_REPTILE])
+
+    model.Add(difficulty_level == 0).OnlyEnforceIf(actions[Buyer.THE_TRIFLING_DIPLOMAT_REPTILE])
+
+    # The indirection is necessary for applying an enforcement literal
+    derived_exhaustion = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, '{}: {}'.format(Buyer.THE_TRIFLING_DIPLOMAT_REPTILE.name, 'derived exhaustion'))
+    model.AddDivisionEquality(derived_exhaustion, compromising_documents, 100)
+    model.Add(added_exhaustion == derived_exhaustion).OnlyEnforceIf(actions[Buyer.THE_TRIFLING_DIPLOMAT_REPTILE])
+
+    del non_negative_amalgamy, non_negative_menace, non_negative_antiquity, compromising_documents, value_remainder, derived_exhaustion
+
+
     # The Trifling Diplomat - Skulls
     model.Add(skeleton_in_progress >= 100).OnlyEnforceIf(actions[Buyer.THE_TRIFLING_DIPLOMAT_SKULLS])
     model.Add(skulls >= 5).OnlyEnforceIf(actions[Buyer.THE_TRIFLING_DIPLOMAT_SKULLS])
@@ -1204,16 +1250,16 @@ def Solve(shadowy_level, bone_market_fluctuations = None, zoological_mania = Non
     model.Add(net_profit == total_revenue - cost)
 
     # This is necessary to preserve some degree of precision after dividing
-    multiplied_net_profit = model.NewIntVar(cp_model.INT32_MIN*PROFIT_MARGIN_MULTIPLIER, cp_model.INT32_MAX*PROFIT_MARGIN_MULTIPLIER, 'multiplied net profit')
+    multiplied_net_profit = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'multiplied net profit')
     model.AddMultiplicationEquality(multiplied_net_profit, [net_profit, PROFIT_MARGIN_MULTIPLIER])
 
-    absolute_multiplied_net_profit = model.NewIntVar(0, cp_model.INT32_MAX*PROFIT_MARGIN_MULTIPLIER, 'absolute multiplied net profit')
+    absolute_multiplied_net_profit = model.NewIntVar(0, cp_model.INT32_MAX, 'absolute multiplied net profit')
     model.AddAbsEquality(absolute_multiplied_net_profit, multiplied_net_profit)
 
-    absolute_profit_margin = model.NewIntVar(cp_model.INT32_MIN*PROFIT_MARGIN_MULTIPLIER, cp_model.INT32_MAX*PROFIT_MARGIN_MULTIPLIER, 'absolute profit margin')
+    absolute_profit_margin = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'absolute profit margin')
     model.AddDivisionEquality(absolute_profit_margin, absolute_multiplied_net_profit, total_revenue)
 
-    profit_margin = model.NewIntVar(cp_model.INT32_MIN*PROFIT_MARGIN_MULTIPLIER, cp_model.INT32_MAX*PROFIT_MARGIN_MULTIPLIER, 'profit margin')
+    profit_margin = model.NewIntVar(cp_model.INT32_MIN, cp_model.INT32_MAX, 'profit margin')
 
     positive_net_profit = model.NewIntermediateBoolVar('positive net profit', net_profit, cp_model.Domain.FromFlatIntervals([0, cp_model.INT_MAX]))
     model.Add(profit_margin == absolute_profit_margin).OnlyEnforceIf(positive_net_profit)

@@ -100,6 +100,10 @@ class Cost(Enum):
     # Various opportunity cards
     HELL_FAVOURS = ACTION
 
+    # Infiltrating...
+    # Khan's Heart, 10 at a time
+    INFILTRATING = ACTION/10
+
     # Hinterland Scrip
     HINTERLAND_SCRIP = 50
 
@@ -149,7 +153,7 @@ class Cost(Enum):
     # Parabolan Orange-apple
     # Parabolan Base-camp
     ORANGE_APPLE = 2*ACTION + 1100*BONE_FRAGMENT
-    
+
     # Ivory Humerus
     # Bohemian Sculptress
     IVORY_HUMERUS = ACTION + ORANGE_APPLE
@@ -181,7 +185,8 @@ class Cost(Enum):
     SCINTILLACK = 250
 
     # Searing Enigma
-    SEARING_ENIGMA = 6250
+    # Khan's Heart
+    SEARING_ENIGMA = 2*ACTION + 130*INFILTRATING
 
     # Carved Ball of Stygian Ivory
     STYGIAN_IVORY = 250
